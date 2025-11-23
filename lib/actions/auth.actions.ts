@@ -1,43 +1,118 @@
 'use server';
 
-import {auth} from "@/lib/better-auth/auth";
-import {inngest} from "@/lib/inngest/client";
-import {headers} from "next/headers";
+import { auth } from '@/lib/better-auth/auth';
+import { inngest } from '@/lib/inngest/client';
+import { headers } from 'next/headers';
+import { signUpSchema, signInSchema } from '@/lib/validations/auth';
+import { z } from 'zod';
 
-export const signUpWithEmail = async ({ email, password, fullName, country, investmentGoals, riskTolerance, preferredIndustry }: SignUpFormData) => {
-    try {
-        const response = await auth.api.signUpEmail({ body: { email, password, name: fullName } })
+export const signUpWithEmail = async (data: SignUpFormData) => {
+  try {
+    // Validate input
+    const validatedData = signUpSchema.parse(data);
 
-        if(response) {
-            await inngest.send({
-                name: 'app/user.created',
-                data: { email, name: fullName, country, investmentGoals, riskTolerance, preferredIndustry }
-            })
-        }
+    const response = await auth.api.signUpEmail({
+      body: {
+        email: validatedData.email,
+        password: validatedData.password,
+        name: validatedData.fullName,
+      },
+    });
 
-        return { success: true, data: response }
-    } catch (e) {
-        console.log('Sign up failed', e)
-        return { success: false, error: 'Sign up failed' }
+    if (response) {
+      await inngest.send({
+        name: 'app/user.created',
+        data: {
+          email: validatedData.email,
+          name: validatedData.fullName,
+          country: validatedData.country,
+          investmentGoals: validatedData.investmentGoals,
+          riskTolerance: validatedData.riskTolerance,
+          preferredIndustry: validatedData.preferredIndustry,
+        },
+      });
     }
-}
 
-export const signInWithEmail = async ({ email, password }: SignInFormData) => {
-    try {
-        const response = await auth.api.signInEmail({ body: { email, password } })
+    return { success: true, data: response };
+  } catch (error) {
+    console.error('Sign up failed:', error);
 
-        return { success: true, data: response }
-    } catch (e) {
-        console.log('Sign in failed', e)
-        return { success: false, error: 'Sign in failed' }
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: {
+          message: 'Invalid input data',
+          code: 'VALIDATION_ERROR',
+          details: error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        },
+      };
     }
-}
+
+    return {
+      success: false,
+      error: {
+        message: error instanceof Error ? error.message : 'Sign up failed',
+        code: 'SIGNUP_ERROR',
+      },
+    };
+  }
+};
+
+export const signInWithEmail = async (data: SignInFormData) => {
+  try {
+    // Validate input
+    const validatedData = signInSchema.parse(data);
+
+    const response = await auth.api.signInEmail({
+      body: {
+        email: validatedData.email,
+        password: validatedData.password,
+      },
+    });
+
+    return { success: true, data: response };
+  } catch (error) {
+    console.error('Sign in failed:', error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: {
+          message: 'Invalid input data',
+          code: 'VALIDATION_ERROR',
+          details: error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        },
+      };
+    }
+
+    return {
+      success: false,
+      error: {
+        message: error instanceof Error ? error.message : 'Sign in failed',
+        code: 'SIGNIN_ERROR',
+      },
+    };
+  }
+};
 
 export const signOut = async () => {
-    try {
-        await auth.api.signOut({ headers: await headers() });
-    } catch (e) {
-        console.log('Sign out failed', e)
-        return { success: false, error: 'Sign out failed' }
-    }
-}
+  try {
+    await auth.api.signOut({ headers: await headers() });
+    return { success: true };
+  } catch (error) {
+    console.error('Sign out failed:', error);
+    return {
+      success: false,
+      error: {
+        message: error instanceof Error ? error.message : 'Sign out failed',
+        code: 'SIGNOUT_ERROR',
+      },
+    };
+  }
+};

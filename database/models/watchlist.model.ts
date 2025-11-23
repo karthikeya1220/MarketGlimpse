@@ -20,5 +20,11 @@ const WatchlistSchema = new Schema<WatchlistItem>(
 // Prevent duplicate symbols per user
 WatchlistSchema.index({ userId: 1, symbol: 1 }, { unique: true });
 
+// For sorting by date
+WatchlistSchema.index({ addedAt: -1 });
+
+// For symbol lookups
+WatchlistSchema.index({ symbol: 1 });
+
 export const Watchlist: Model<WatchlistItem> =
   (models?.Watchlist as Model<WatchlistItem>) || model<WatchlistItem>('Watchlist', WatchlistSchema);

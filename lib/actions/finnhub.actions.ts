@@ -5,7 +5,22 @@ import { POPULAR_STOCK_SYMBOLS } from '@/lib/constants';
 import { cache } from 'react';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
-const NEXT_PUBLIC_FINNHUB_API_KEY = process.env.NEXT_PUBLIC_FINNHUB_API_KEY ?? '';
+const token = process.env.FINNHUB_API_KEY; // Don't expose publicly
+
+type ProfileData = {
+  name?: string;
+  ticker?: string;
+  exchange?: string;
+};
+
+type ProfileResult = {
+  sym: string;
+  profile: ProfileData | null;
+};
+
+type FinnhubSearchResultWithExchange = FinnhubSearchResult & {
+  __exchange?: string;
+};
 
 async function fetchJSON<T>(url: string, revalidateSeconds?: number): Promise<T> {
   const options: RequestInit & { next?: { revalidate?: number } } = revalidateSeconds
@@ -25,7 +40,6 @@ export { fetchJSON };
 export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> {
   try {
     const range = getDateRange(5);
-    const token = process.env.FINNHUB_API_KEY ?? NEXT_PUBLIC_FINNHUB_API_KEY;
     if (!token) {
       throw new Error('FINNHUB API key is not configured');
     }
@@ -57,6 +71,7 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
       for (let round = 0; round < maxArticles; round++) {
         for (let i = 0; i < cleanSymbols.length; i++) {
           const sym = cleanSymbols[i];
+          if (!sym) continue;
           const list = perSymbolArticles[sym] || [];
           if (list.length === 0) continue;
           const article = list.shift();
@@ -90,7 +105,9 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
       if (unique.length >= 20) break; // cap early before final slicing
     }
 
-    const formatted = unique.slice(0, maxArticles).map((a, idx) => formatArticle(a, false, undefined, idx));
+    const formatted = unique
+      .slice(0, maxArticles)
+      .map((a, idx) => formatArticle(a, false, undefined, idx));
     return formatted;
   } catch (err) {
     console.error('getNews error:', err);
@@ -100,7 +117,6 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
 
 export const searchStocks = cache(async (query?: string): Promise<StockWithWatchlistStatus[]> => {
   try {
-    const token = process.env.FINNHUB_API_KEY ?? NEXT_PUBLIC_FINNHUB_API_KEY;
     if (!token) {
       // If no token, log and return empty to avoid throwing per requirements
       console.error('Error in stock search:', new Error('FINNHUB API key is not configured'));
@@ -115,15 +131,15 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
       // Fetch top 10 popular symbols' profiles
       const top = POPULAR_STOCK_SYMBOLS.slice(0, 10);
       const profiles = await Promise.all(
-        top.map(async (sym) => {
+        top.map(async (sym): Promise<ProfileResult> => {
           try {
             const url = `${FINNHUB_BASE_URL}/stock/profile2?symbol=${encodeURIComponent(sym)}&token=${token}`;
             // Revalidate every hour
-            const profile = await fetchJSON<any>(url, 3600);
-            return { sym, profile } as { sym: string; profile: any };
+            const profile = await fetchJSON<ProfileData>(url, 3600);
+            return { sym, profile };
           } catch (e) {
             console.error('Error fetching profile2 for', sym, e);
-            return { sym, profile: null } as { sym: string; profile: any };
+            return { sym, profile: null };
           }
         })
       );
@@ -134,7 +150,7 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
           const name: string | undefined = profile?.name || profile?.ticker || undefined;
           const exchange: string | undefined = profile?.exchange || undefined;
           if (!name) return undefined;
-          const r: FinnhubSearchResult = {
+          const r: FinnhubSearchResultWithExchange = {
             symbol,
             description: name,
             displaySymbol: symbol,
@@ -143,10 +159,10 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
           // We don't include exchange in FinnhubSearchResult type, so carry via mapping later using profile
           // To keep pipeline simple, attach exchange via closure map stage
           // We'll reconstruct exchange when mapping to final type
-          (r as any).__exchange = exchange; // internal only
+          r.__exchange = exchange; // internal only
           return r;
         })
-        .filter((x): x is FinnhubSearchResult => Boolean(x));
+        .filter((x): x is FinnhubSearchResultWithExchange => Boolean(x));
     } else {
       const url = `${FINNHUB_BASE_URL}/search?q=${encodeURIComponent(trimmed)}&token=${token}`;
       const data = await fetchJSON<FinnhubSearchResponse>(url, 1800);
@@ -158,7 +174,8 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
         const upper = (r.symbol || '').toUpperCase();
         const name = r.description || upper;
         const exchangeFromDisplay = (r.displaySymbol as string | undefined) || undefined;
-        const exchangeFromProfile = (r as any).__exchange as string | undefined;
+        const resultWithExchange = r as FinnhubSearchResultWithExchange;
+        const exchangeFromProfile = resultWithExchange.__exchange;
         const exchange = exchangeFromDisplay || exchangeFromProfile || 'US';
         const type = r.type || 'Stock';
         const item: StockWithWatchlistStatus = {
