@@ -23,7 +23,19 @@ const TradingViewWidget = ({
 
   return (
     <div className="w-full">
-      {title && <h3 className="font-semibold text-2xl text-gray-100 mb-5">{title}</h3>}
+      {title && (
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-semibold text-2xl text-gray-100">{title}</h3>
+          {title.includes('Heatmap') && (
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <span className="inline-block w-3 h-3 bg-green-500 rounded-sm"></span>
+              <span>Gainers</span>
+              <span className="inline-block w-3 h-3 bg-red-500 rounded-sm ml-2"></span>
+              <span>Losers</span>
+            </div>
+          )}
+        </div>
+      )}
       <div className={cn('tradingview-widget-container', className)} ref={containerRef}>
         <div className="tradingview-widget-container__widget" style={{ height, width: '100%' }} />
       </div>

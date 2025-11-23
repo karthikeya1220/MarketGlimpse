@@ -100,18 +100,18 @@ export const HEATMAP_WIDGET_CONFIG = {
   blockSize: 'market_cap_basic',
   blockColor: 'change',
   grouping: 'sector',
-  isTransparent: true,
+  isTransparent: false,
   locale: 'en',
   symbolUrl: '',
   colorTheme: 'dark',
   exchanges: [],
-  hasTopBar: false,
-  isDataSetEnabled: false,
+  hasTopBar: true,
+  isDataSetEnabled: true,
   isZoomEnabled: true,
   hasSymbolTooltip: true,
   isMonoSize: false,
   width: '100%',
-  height: '600',
+  height: '650',
 };
 
 export const TOP_STORIES_WIDGET_CONFIG = {

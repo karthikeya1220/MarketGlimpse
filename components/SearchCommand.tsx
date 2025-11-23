@@ -96,7 +96,7 @@ export default function SearchCommand({
               {displayStocks?.map((stock) => (
                 <li key={stock.symbol} className="search-item">
                   <Link
-                    // @ts-expect-error - Dynamic route not yet created
+                    // Dynamic route not yet created
                     href={`/stocks/${stock.symbol}`}
                     onClick={handleSelectStock}
                     className="search-item-link"
