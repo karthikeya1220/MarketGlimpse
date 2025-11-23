@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { logger } from '@/lib/logger';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -38,11 +39,11 @@ export const connectToDatabase = async () => {
 
     // Add connection event listeners
     mongoose.connection.on('error', (err) => {
-      console.error('MongoDB connection error:', err);
+      logger.error('MongoDB connection error', err);
     });
 
     mongoose.connection.on('disconnected', () => {
-      console.warn('MongoDB disconnected');
+      logger.warn('MongoDB disconnected');
       cached.conn = null;
       cached.promise = null;
     });
@@ -52,7 +53,7 @@ export const connectToDatabase = async () => {
   }
 
   if (process.env.NODE_ENV === 'development') {
-    console.log(`Connected to database`);
+    logger.debug('Connected to database');
   }
 
   return cached.conn;

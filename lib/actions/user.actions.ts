@@ -1,6 +1,7 @@
 'use server';
 
 import { connectToDatabase } from '@/database/mongoose';
+import { logger } from '@/lib/logger';
 
 export const getAllUsersForNewsEmail = async () => {
   try {
@@ -24,7 +25,7 @@ export const getAllUsersForNewsEmail = async () => {
         name: user.name,
       }));
   } catch (e) {
-    console.error('Error fetching users for news email:', e);
+    logger.error('Failed to fetch users for news email', e instanceof Error ? e : new Error(String(e)));
     return [];
   }
 };

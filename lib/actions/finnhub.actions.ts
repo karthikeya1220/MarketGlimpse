@@ -2,6 +2,8 @@
 
 import { getDateRange, validateArticle, formatArticle } from '@/lib/utils';
 import { POPULAR_STOCK_SYMBOLS } from '@/lib/constants';
+import { logger } from '@/lib/logger';
+import { requestDeduplicator } from '@/lib/request-deduplicator';
 import { cache } from 'react';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
@@ -27,12 +29,15 @@ async function fetchJSON<T>(url: string, revalidateSeconds?: number): Promise<T>
     ? { cache: 'force-cache', next: { revalidate: revalidateSeconds } }
     : { cache: 'no-store' };
 
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`Fetch failed ${res.status}: ${text}`);
-  }
-  return (await res.json()) as T;
+  // Use request deduplication to prevent redundant API calls
+  return requestDeduplicator.deduplicate(url, async () => {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`Fetch failed ${res.status}: ${text}`);
+    }
+    return (await res.json()) as T;
+  });
 }
 
 export { fetchJSON };
@@ -60,7 +65,7 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
             const articles = await fetchJSON<RawNewsArticle[]>(url, 300);
             perSymbolArticles[sym] = (articles || []).filter(validateArticle);
           } catch (e) {
-            console.error('Error fetching company news for', sym, e);
+            logger.error('Error fetching company news', e instanceof Error ? e : new Error(String(e)), { symbol: sym });
             perSymbolArticles[sym] = [];
           }
         })
@@ -110,7 +115,7 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
       .map((a, idx) => formatArticle(a, false, undefined, idx));
     return formatted;
   } catch (err) {
-    console.error('getNews error:', err);
+    logger.error('Failed to fetch news', err instanceof Error ? err : new Error(String(err)));
     throw new Error('Failed to fetch news');
   }
 }
@@ -119,7 +124,7 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
   try {
     if (!token) {
       // If no token, log and return empty to avoid throwing per requirements
-      console.error('Error in stock search:', new Error('FINNHUB API key is not configured'));
+      logger.error('FINNHUB API key is not configured', new Error('FINNHUB API key is not configured'));
       return [];
     }
 
@@ -138,7 +143,7 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
             const profile = await fetchJSON<ProfileData>(url, 3600);
             return { sym, profile };
           } catch (e) {
-            console.error('Error fetching profile2 for', sym, e);
+            logger.error('Error fetching profile2', e instanceof Error ? e : new Error(String(e)), { symbol: sym });
             return { sym, profile: null };
           }
         })
@@ -191,7 +196,7 @@ export const searchStocks = cache(async (query?: string): Promise<StockWithWatch
 
     return mapped;
   } catch (err) {
-    console.error('Error in stock search:', err);
+    logger.error('Error in stock search', err instanceof Error ? err : new Error(String(err)));
     return [];
   }
 });

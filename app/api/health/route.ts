@@ -1,8 +1,10 @@
 // app/api/health/route.ts
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/database/mongoose';
+import { logger } from '@/lib/logger';
+import { withRateLimit } from '@/lib/middleware/rate-limit';
 
-export async function GET() {
+async function healthCheck() {
   try {
     // Check database connection
     await connectToDatabase();
@@ -16,7 +18,7 @@ export async function GET() {
       },
     });
   } catch (err) {
-    console.error('Health check failed:', err);
+    logger.error('Health check failed', err instanceof Error ? err : new Error(String(err)));
     return NextResponse.json(
       {
         status: 'unhealthy',
@@ -27,3 +29,8 @@ export async function GET() {
     );
   }
 }
+
+// Apply rate limiting (60 requests per minute)
+export const GET = withRateLimit(healthCheck, {
+  limit: 60,
+});

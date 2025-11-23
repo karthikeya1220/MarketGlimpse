@@ -2,6 +2,7 @@
 
 import { connectToDatabase } from '@/database/mongoose';
 import { Watchlist } from '@/database/models/watchlist.model';
+import { logger } from '@/lib/logger';
 
 export async function getWatchlistSymbolsByEmail(email: string): Promise<string[]> {
   if (!email) return [];
@@ -24,7 +25,7 @@ export async function getWatchlistSymbolsByEmail(email: string): Promise<string[
     const items = await Watchlist.find({ userId }, { symbol: 1 }).lean();
     return items.map((i) => String(i.symbol));
   } catch (err) {
-    console.error('getWatchlistSymbolsByEmail error:', err);
+    logger.error('Failed to get watchlist symbols', err instanceof Error ? err : new Error(String(err)), { email });
     return [];
   }
 }

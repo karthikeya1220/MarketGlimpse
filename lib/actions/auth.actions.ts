@@ -4,6 +4,7 @@ import { auth } from '@/lib/better-auth/auth';
 import { inngest } from '@/lib/inngest/client';
 import { headers } from 'next/headers';
 import { signUpSchema, signInSchema } from '@/lib/validations/auth';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 export const signUpWithEmail = async (data: SignUpFormData) => {
@@ -35,7 +36,7 @@ export const signUpWithEmail = async (data: SignUpFormData) => {
 
     return { success: true, data: response };
   } catch (error) {
-    console.error('Sign up failed:', error);
+    logger.error('Sign up failed', error instanceof Error ? error : new Error(String(error)));
 
     if (error instanceof z.ZodError) {
       return {
@@ -75,7 +76,7 @@ export const signInWithEmail = async (data: SignInFormData) => {
 
     return { success: true, data: response };
   } catch (error) {
-    console.error('Sign in failed:', error);
+    logger.error('Sign in failed', error instanceof Error ? error : new Error(String(error)));
 
     if (error instanceof z.ZodError) {
       return {
@@ -106,7 +107,7 @@ export const signOut = async () => {
     await auth.api.signOut({ headers: await headers() });
     return { success: true };
   } catch (error) {
-    console.error('Sign out failed:', error);
+    logger.error('Sign out failed', error instanceof Error ? error : new Error(String(error)));
     return {
       success: false,
       error: {
