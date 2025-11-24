@@ -6,14 +6,13 @@ import { fetchJSON } from '@/lib/actions/finnhub.actions';
 import { formatPrice, formatChangePercent, getChangeColorClass, formatMarketCapValue } from '@/lib/utils';
 import WatchlistButton from '@/components/WatchlistButton';
 import Link from 'next/link';
+import { env } from '@/lib/env';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
-const token = process.env.FINNHUB_API_KEY;
+const token = env.FINNHUB_API_KEY;
 
 async function getStockData(symbol: string) {
   try {
-    if (!token) return null;
-    
     const [quote, profile] = await Promise.all([
       fetchJSON<{ c?: number; dp?: number }>(`${FINNHUB_BASE_URL}/quote?symbol=${symbol}&token=${token}`, 300),
       fetchJSON<{ marketCapitalization?: number; name?: string }>(`${FINNHUB_BASE_URL}/stock/profile2?symbol=${symbol}&token=${token}`, 3600),
@@ -24,7 +23,7 @@ async function getStockData(symbol: string) {
       changePercent: quote.dp,
       marketCap: profile.marketCapitalization,
     };
-  } catch (error) {
+  } catch {
     return null;
   }
 }

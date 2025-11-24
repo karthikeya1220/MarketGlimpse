@@ -1,4 +1,6 @@
 // lib/logger.ts
+import * as Sentry from '@sentry/nextjs';
+
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 class Logger {
@@ -13,7 +15,23 @@ class Logger {
 
     // In production, send to logging service
     if (process.env.NODE_ENV === 'production') {
-      // TODO: Send to logging service (DataDog, CloudWatch, etc.)
+      // Send to Sentry for error level
+      if (level === 'error') {
+        const error = meta?.error as Error | undefined;
+        if (error instanceof Error) {
+          Sentry.captureException(error, {
+            extra: { ...meta, message },
+            level: 'error',
+          });
+        } else {
+          Sentry.captureMessage(message, {
+            extra: meta,
+            level: 'error',
+          });
+        }
+      }
+      
+      // TODO: Send to additional logging service (DataDog, CloudWatch, etc.) if needed
     }
 
     console[level === 'error' ? 'error' : 'log'](logEntry);
@@ -21,10 +39,32 @@ class Logger {
 
   info(message: string, meta?: Record<string, unknown>) {
     this.log('info', message, meta);
+    
+    // Send breadcrumb to Sentry
+    Sentry.addBreadcrumb({
+      message,
+      level: 'info',
+      data: meta,
+    });
   }
 
   warn(message: string, meta?: Record<string, unknown>) {
     this.log('warn', message, meta);
+    
+    // Send breadcrumb to Sentry
+    Sentry.addBreadcrumb({
+      message,
+      level: 'warning',
+      data: meta,
+    });
+    
+    // Also capture warning in Sentry for visibility
+    if (process.env.NODE_ENV === 'production') {
+      Sentry.captureMessage(message, {
+        level: 'warning',
+        extra: meta,
+      });
+    }
   }
 
   error(message: string, error?: Error, meta?: Record<string, unknown>) {
@@ -43,3 +83,4 @@ class Logger {
 }
 
 export const logger = new Logger();
+

@@ -23,6 +23,9 @@ const envSchema = z.object({
   NODEMAILER_PASSWORD: z
     .string()
     .min(1, 'Email password is required. Use Gmail app password from https://myaccount.google.com/apppasswords'),
+  // Optional: Sentry DSN for error tracking (only required in production)
+  SENTRY_DSN: z.string().url('Invalid Sentry DSN').optional(),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url('Invalid Sentry DSN').optional(),
 });
 
 // Parse and validate environment variables

@@ -6,8 +6,9 @@ import { headers } from 'next/headers';
 import { signUpSchema, signInSchema } from '@/lib/validations/auth';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import { type ActionResult, successResult, errorResult } from '@/lib/action-types';
 
-export const signUpWithEmail = async (data: SignUpFormData) => {
+export const signUpWithEmail = async (data: SignUpFormData): Promise<ActionResult<unknown>> => {
   try {
     // Validate input
     const validatedData = signUpSchema.parse(data);
@@ -34,35 +35,23 @@ export const signUpWithEmail = async (data: SignUpFormData) => {
       });
     }
 
-    return { success: true, data: response };
+    return successResult(response as unknown, 'Account created successfully');
   } catch (error) {
     logger.error('Sign up failed', error instanceof Error ? error : new Error(String(error)));
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: {
-          message: 'Invalid input data',
-          code: 'VALIDATION_ERROR',
-          details: error.issues.map((issue) => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-          })),
-        },
-      };
+      const errorMessages = error.issues.map((issue) => issue.message).join(', ');
+      return errorResult(errorMessages, 'VALIDATION_ERROR');
     }
 
-    return {
-      success: false,
-      error: {
-        message: error instanceof Error ? error.message : 'Sign up failed',
-        code: 'SIGNUP_ERROR',
-      },
-    };
+    return errorResult(
+      error instanceof Error ? error.message : 'Sign up failed',
+      'SIGNUP_ERROR'
+    );
   }
 };
 
-export const signInWithEmail = async (data: SignInFormData) => {
+export const signInWithEmail = async (data: SignInFormData): Promise<ActionResult<unknown>> => {
   try {
     // Validate input
     const validatedData = signInSchema.parse(data);
@@ -74,46 +63,31 @@ export const signInWithEmail = async (data: SignInFormData) => {
       },
     });
 
-    return { success: true, data: response };
+    return successResult(response as unknown, 'Signed in successfully');
   } catch (error) {
     logger.error('Sign in failed', error instanceof Error ? error : new Error(String(error)));
 
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: {
-          message: 'Invalid input data',
-          code: 'VALIDATION_ERROR',
-          details: error.issues.map((issue) => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-          })),
-        },
-      };
+      const errorMessages = error.issues.map((issue) => issue.message).join(', ');
+      return errorResult(errorMessages, 'VALIDATION_ERROR');
     }
 
-    return {
-      success: false,
-      error: {
-        message: error instanceof Error ? error.message : 'Sign in failed',
-        code: 'SIGNIN_ERROR',
-      },
-    };
+    return errorResult(
+      error instanceof Error ? error.message : 'Sign in failed',
+      'SIGNIN_ERROR'
+    );
   }
 };
 
-export const signOut = async () => {
+export const signOut = async (): Promise<ActionResult<void>> => {
   try {
     await auth.api.signOut({ headers: await headers() });
-    return { success: true };
+    return successResult(undefined, 'Signed out successfully');
   } catch (error) {
     logger.error('Sign out failed', error instanceof Error ? error : new Error(String(error)));
-    return {
-      success: false,
-      error: {
-        message: error instanceof Error ? error.message : 'Sign out failed',
-        code: 'SIGNOUT_ERROR',
-      },
-    };
+    return errorResult(
+      error instanceof Error ? error.message : 'Sign out failed',
+      'SIGNOUT_ERROR'
+    );
   }
 };

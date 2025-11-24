@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import { logger } from '@/lib/logger';
+import { env } from '@/lib/env';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = env.MONGODB_URI;
 
 declare global {
   var mongooseCache: {
@@ -17,8 +18,6 @@ if (!cached) {
 }
 
 export const connectToDatabase = async () => {
-  if (!MONGODB_URI) throw new Error('MONGODB_URI must be set within .env');
-
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {

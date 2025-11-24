@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { connectToDatabase } from '@/database/mongoose';
 import { nextCookies } from 'better-auth/next-js';
+import { env } from '@/lib/env';
 
 let authInstance: ReturnType<typeof betterAuth> | null = null;
 
@@ -15,8 +16,8 @@ export const getAuth = async () => {
 
   authInstance = betterAuth({
     database: mongodbAdapter(db),
-    secret: process.env.BETTER_AUTH_SECRET,
-    baseURL: process.env.BETTER_AUTH_URL,
+    secret: env.BETTER_AUTH_SECRET,
+    baseURL: env.BETTER_AUTH_URL,
     emailAndPassword: {
       enabled: true,
       disableSignUp: false,

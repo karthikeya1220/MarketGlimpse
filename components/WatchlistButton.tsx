@@ -31,25 +31,25 @@ const WatchlistButton = ({
           const result = await addToWatchlist(symbol, company);
           if (result.success) {
             setAdded(true);
-            toast.success(`${symbol} added to watchlist`);
+            toast.success(result.message || `${symbol} added to watchlist`);
             onWatchlistChange?.(symbol, true);
             router.refresh();
           } else {
-            toast.error(result.message || 'Failed to add to watchlist');
+            toast.error(result.error || 'Failed to add to watchlist');
           }
         } else {
           // Removing from watchlist
           const result = await removeFromWatchlist(symbol);
           if (result.success) {
             setAdded(false);
-            toast.success(`${symbol} removed from watchlist`);
+            toast.success(result.message || `${symbol} removed from watchlist`);
             onWatchlistChange?.(symbol, false);
             router.refresh();
           } else {
-            toast.error(result.message || 'Failed to remove from watchlist');
+            toast.error(result.error || 'Failed to remove from watchlist');
           }
         }
-      } catch (error) {
+      } catch {
         toast.error('An error occurred');
       }
     });

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { logger } from '@/lib/logger';
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * Next.js Error component - catches errors in route segments
@@ -16,9 +16,11 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log error to monitoring service
-    logger.error('Route error occurred', error, {
-      digest: error.digest,
+    // Log error to Sentry
+    Sentry.captureException(error, {
+      extra: {
+        digest: error.digest,
+      },
     });
   }, [error]);
 

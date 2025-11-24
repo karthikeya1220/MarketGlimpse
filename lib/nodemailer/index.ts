@@ -1,12 +1,13 @@
 import nodemailer from 'nodemailer';
 import { WELCOME_EMAIL_TEMPLATE, NEWS_SUMMARY_EMAIL_TEMPLATE } from '@/lib/nodemailer/templates';
 import { getFormattedTodayDate } from '@/lib/utils';
+import { env } from '@/lib/env';
 
 export const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.NODEMAILER_EMAIL!,
-    pass: process.env.NODEMAILER_PASSWORD!,
+    user: env.NODEMAILER_EMAIL,
+    pass: env.NODEMAILER_PASSWORD,
   },
 });
 

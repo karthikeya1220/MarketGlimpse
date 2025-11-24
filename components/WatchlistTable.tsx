@@ -1,83 +1,83 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { WATCHLIST_TABLE_HEADER } from '@/lib/constants';
+import { getChangeColorClass } from '@/lib/utils';
+import WatchlistButton from '@/components/WatchlistButton';
+import Link from 'next/link';
 
-export default function WatchlistTable() {
-  const sampleData = [
-    {
-      company: 'Apple Inc.',
-      symbol: 'AAPL',
-      price: '$175.43',
-      change: '+2.34%',
-      marketCap: '$2.75T',
-      peRatio: '28.5',
-      alert: 'Active',
-      action: 'View',
-    },
-    {
-      company: 'Microsoft Corporation',
-      symbol: 'MSFT',
-      price: '$378.91',
-      change: '+1.52%',
-      marketCap: '$2.81T',
-      peRatio: '35.2',
-      alert: 'None',
-      action: 'View',
-    },
-    {
-      company: 'Amazon.com Inc.',
-      symbol: 'AMZN',
-      price: '$151.94',
-      change: '-0.87%',
-      marketCap: '$1.57T',
-      peRatio: '52.1',
-      alert: 'Active',
-      action: 'View',
-    },
-    {
-      company: 'Tesla Inc.',
-      symbol: 'TSLA',
-      price: '$242.84',
-      change: '+3.45%',
-      marketCap: '$771.5B',
-      peRatio: '65.8',
-      alert: 'None',
-      action: 'View',
-    },
-    {
-      company: 'Alphabet Inc.',
-      symbol: 'GOOGL',
-      price: '$139.57',
-      change: '+0.92%',
-      marketCap: '$1.75T',
-      peRatio: '26.3',
-      alert: 'Active',
-      action: 'View',
-    },
-  ];
+interface WatchlistTableProps {
+  watchlist: StockWithData[];
+}
+
+export default function WatchlistTable({ watchlist }: WatchlistTableProps) {
+  if (!watchlist || watchlist.length === 0) {
+    return (
+      <div className="rounded-md border border-gray-700 bg-gray-800/50 p-12 text-center">
+        <p className="text-gray-400">No stocks in your watchlist yet.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="rounded-md border">
+    <div className="overflow-x-auto rounded-lg border border-gray-700">
       <Table>
         <TableHeader>
-          <TableRow>
-            {WATCHLIST_TABLE_HEADER.map((header) => (
-              <TableHead key={header} className="text-left">
-                {header}
-              </TableHead>
-            ))}
+          <TableRow className="bg-gray-800 border-b border-gray-700">
+            <TableHead className="text-left text-sm font-semibold text-gray-300">Company</TableHead>
+            <TableHead className="text-left text-sm font-semibold text-gray-300">Symbol</TableHead>
+            <TableHead className="text-left text-sm font-semibold text-gray-300">Price</TableHead>
+            <TableHead className="text-left text-sm font-semibold text-gray-300">Change</TableHead>
+            <TableHead className="text-left text-sm font-semibold text-gray-300">Market Cap</TableHead>
+            <TableHead className="text-left text-sm font-semibold text-gray-300">Actions</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {sampleData.map((row, index) => (
-            <TableRow key={index}>
-              <TableCell className="text-left">{row.company}</TableCell>
-              <TableCell className="text-left">{row.symbol}</TableCell>
-              <TableCell className="text-left">{row.price}</TableCell>
-              <TableCell className="text-left">{row.change}</TableCell>
-              <TableCell className="text-left">{row.marketCap}</TableCell>
-              <TableCell className="text-left">{row.peRatio}</TableCell>
-              <TableCell className="text-left">{row.alert}</TableCell>
-              <TableCell className="text-left">{row.action}</TableCell>
+        <TableBody className="bg-gray-900 divide-y divide-gray-800">
+          {watchlist.map((item) => (
+            <TableRow key={item.symbol} className="hover:bg-gray-800/50 transition-colors">
+              <TableCell className="px-6 py-4">
+                <Link 
+                  href={`/stocks/${item.symbol}`}
+                  className="hover:text-yellow-500 transition-colors"
+                >
+                  <div className="font-medium text-gray-100">{item.company}</div>
+                </Link>
+              </TableCell>
+              <TableCell className="px-6 py-4">
+                <Link 
+                  href={`/stocks/${item.symbol}`}
+                  className="hover:text-yellow-500 transition-colors"
+                >
+                  <div className="text-gray-300 font-mono">{item.symbol}</div>
+                </Link>
+              </TableCell>
+              <TableCell className="px-6 py-4">
+                <div className="text-gray-100 font-semibold">
+                  {item.priceFormatted || 'N/A'}
+                </div>
+              </TableCell>
+              <TableCell className="px-6 py-4">
+                <div className={`font-semibold ${getChangeColorClass(item.changePercent)}`}>
+                  {item.changeFormatted || '--'}
+                </div>
+              </TableCell>
+              <TableCell className="px-6 py-4">
+                <div className="text-gray-300">{item.marketCap || 'N/A'}</div>
+              </TableCell>
+              <TableCell className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/stocks/${item.symbol}`}
+                    className="text-yellow-500 hover:text-yellow-400 text-sm font-medium transition-colors"
+                  >
+                    View Details
+                  </Link>
+                  <WatchlistButton
+                    symbol={item.symbol}
+                    company={item.company}
+                    isInWatchlist={true}
+                    showTrashIcon={true}
+                    type="button"
+                  />
+                </div>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

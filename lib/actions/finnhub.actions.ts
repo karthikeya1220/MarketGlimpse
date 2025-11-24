@@ -5,9 +5,10 @@ import { POPULAR_STOCK_SYMBOLS } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 import { requestDeduplicator } from '@/lib/request-deduplicator';
 import { cache } from 'react';
+import { env } from '@/lib/env';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
-const token = process.env.FINNHUB_API_KEY; // Don't expose publicly
+const token = env.FINNHUB_API_KEY;
 
 type ProfileData = {
   name?: string;
@@ -45,9 +46,6 @@ export { fetchJSON };
 export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> {
   try {
     const range = getDateRange(5);
-    if (!token) {
-      throw new Error('FINNHUB API key is not configured');
-    }
     const cleanSymbols = (symbols || [])
       .map((s) => s?.trim().toUpperCase())
       .filter((s): s is string => Boolean(s));
@@ -122,12 +120,6 @@ export async function getNews(symbols?: string[]): Promise<MarketNewsArticle[]> 
 
 export const searchStocks = cache(async (query?: string): Promise<StockWithWatchlistStatus[]> => {
   try {
-    if (!token) {
-      // If no token, log and return empty to avoid throwing per requirements
-      logger.error('FINNHUB API key is not configured', new Error('FINNHUB API key is not configured'));
-      return [];
-    }
-
     const trimmed = typeof query === 'string' ? query.trim() : '';
 
     let results: FinnhubSearchResult[] = [];

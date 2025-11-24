@@ -5,6 +5,7 @@ import { Watchlist, type WatchlistItem } from '@/database/models/watchlist.model
 import { logger } from '@/lib/logger';
 import { auth } from '@/lib/better-auth/auth';
 import { headers } from 'next/headers';
+import { type ActionResult, successResult, errorResult } from '@/lib/action-types';
 
 export async function getWatchlistSymbolsByEmail(email: string): Promise<string[]> {
   if (!email) return [];
@@ -58,7 +59,7 @@ export async function getUserWatchlist(): Promise<WatchlistItem[]> {
   }
 }
 
-export async function addToWatchlist(symbol: string, company: string): Promise<{ success: boolean; message: string }> {
+export async function addToWatchlist(symbol: string, company: string): Promise<ActionResult<void>> {
   try {
     await connectToDatabase();
     
@@ -67,7 +68,7 @@ export async function addToWatchlist(symbol: string, company: string): Promise<{
     });
 
     if (!session?.user?.id) {
-      return { success: false, message: 'Not authenticated' };
+      return errorResult('Not authenticated', 'AUTH_ERROR');
     }
 
     const existing = await Watchlist.findOne({
@@ -76,7 +77,7 @@ export async function addToWatchlist(symbol: string, company: string): Promise<{
     });
 
     if (existing) {
-      return { success: false, message: 'Stock already in watchlist' };
+      return errorResult('Stock already in watchlist', 'DUPLICATE_ERROR');
     }
 
     await Watchlist.create({
@@ -87,14 +88,14 @@ export async function addToWatchlist(symbol: string, company: string): Promise<{
     });
 
     logger.info(`Added ${symbol} to watchlist for user ${session.user.id}`);
-    return { success: true, message: 'Added to watchlist' };
+    return successResult(undefined, 'Added to watchlist');
   } catch (err) {
     logger.error('Failed to add to watchlist', err instanceof Error ? err : new Error(String(err)));
-    return { success: false, message: 'Failed to add to watchlist' };
+    return errorResult('Failed to add to watchlist', 'SERVER_ERROR');
   }
 }
 
-export async function removeFromWatchlist(symbol: string): Promise<{ success: boolean; message: string }> {
+export async function removeFromWatchlist(symbol: string): Promise<ActionResult<void>> {
   try {
     await connectToDatabase();
     
@@ -103,7 +104,7 @@ export async function removeFromWatchlist(symbol: string): Promise<{ success: bo
     });
 
     if (!session?.user?.id) {
-      return { success: false, message: 'Not authenticated' };
+      return errorResult('Not authenticated', 'AUTH_ERROR');
     }
 
     const result = await Watchlist.deleteOne({
@@ -112,13 +113,13 @@ export async function removeFromWatchlist(symbol: string): Promise<{ success: bo
     });
 
     if (result.deletedCount === 0) {
-      return { success: false, message: 'Stock not found in watchlist' };
+      return errorResult('Stock not found in watchlist', 'NOT_FOUND');
     }
 
     logger.info(`Removed ${symbol} from watchlist for user ${session.user.id}`);
-    return { success: true, message: 'Removed from watchlist' };
+    return successResult(undefined, 'Removed from watchlist');
   } catch (err) {
     logger.error('Failed to remove from watchlist', err instanceof Error ? err : new Error(String(err)));
-    return { success: false, message: 'Failed to remove from watchlist' };
+    return errorResult('Failed to remove from watchlist', 'SERVER_ERROR');
   }
 }
