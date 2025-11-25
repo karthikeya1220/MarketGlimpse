@@ -5,15 +5,17 @@ import WatchlistStats from './WatchlistStats';
 import WatchlistActions from './WatchlistActions';
 import WatchlistStockCard from './WatchlistStockCard';
 import WatchlistTable from './WatchlistTable';
+import { WatchlistControls, sortWatchlist, filterWatchlist } from './WatchlistControls';
 
 interface WatchlistContentProps {
   watchlistData: StockWithData[];
+  onUpdate?: () => void;
 }
 
-const WatchlistContent = ({ watchlistData }: WatchlistContentProps) => {
+const WatchlistContent = ({ watchlistData, onUpdate }: WatchlistContentProps) => {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const [sortBy, setSortBy] = useState('symbol');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<'symbol-asc' | 'symbol-desc' | 'price-asc' | 'price-desc' | 'change-asc' | 'change-desc' | 'date-asc' | 'date-desc'>('date-desc');
+  const [filterBy, setFilterBy] = useState<'all' | 'gainers' | 'losers' | 'has-notes' | 'has-tags'>('all');
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -28,75 +30,43 @@ const WatchlistContent = ({ watchlistData }: WatchlistContentProps) => {
     return { totalStocks, averageChange, gainers, losers };
   }, [watchlistData]);
 
-  // Sort data
-  const sortedData = useMemo(() => {
-    const sorted = [...watchlistData].sort((a, b) => {
-      let aValue: string | number = '';
-      let bValue: string | number = '';
-
-      switch (sortBy) {
-        case 'symbol':
-          aValue = a.symbol;
-          bValue = b.symbol;
-          break;
-        case 'company':
-          aValue = a.company;
-          bValue = b.company;
-          break;
-        case 'price':
-          aValue = a.currentPrice || 0;
-          bValue = b.currentPrice || 0;
-          break;
-        case 'change':
-          aValue = a.changePercent || 0;
-          bValue = b.changePercent || 0;
-          break;
-        case 'marketCap':
-          aValue = a.marketCap || '';
-          bValue = b.marketCap || '';
-          break;
-        default:
-          return 0;
-      }
-
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortOrder === 'asc' 
-          ? aValue.localeCompare(bValue) 
-          : bValue.localeCompare(aValue);
-      }
-
-      return sortOrder === 'asc' 
-        ? (aValue as number) - (bValue as number)
-        : (bValue as number) - (aValue as number);
-    });
-
+  // Apply filtering and sorting
+  const processedData = useMemo(() => {
+    const filtered = filterWatchlist(watchlistData, filterBy);
+    const sorted = sortWatchlist(filtered, sortBy);
     return sorted;
-  }, [watchlistData, sortBy, sortOrder]);
+  }, [watchlistData, filterBy, sortBy]);
 
   return (
     <div className="space-y-6 md:space-y-8">
       {/* Stats */}
       <WatchlistStats {...stats} />
 
+      {/* Controls - Sort and Filter */}
+      <WatchlistControls 
+        onSortChange={setSortBy}
+        onFilterChange={setFilterBy}
+      />
+
       {/* Actions */}
       <WatchlistActions
         viewMode={viewMode}
         onViewModeChange={setViewMode}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        sortOrder={sortOrder}
-        onSortOrderChange={setSortOrder}
       />
 
       {/* Content */}
-      {viewMode === 'grid' ? (
+      {processedData.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-400">No stocks match your filter criteria</p>
+        </div>
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {sortedData.map((item, index) => (
-            <WatchlistStockCard key={item.symbol} item={item} index={index} />
+          {processedData.map((item, index) => (
+            <WatchlistStockCard key={item.symbol} item={item} index={index} onUpdate={onUpdate} />
           ))}
         </div>
       ) : (
-        <WatchlistTable watchlist={sortedData} />
+        <WatchlistTable watchlist={processedData} />
       )}
     </div>
   );

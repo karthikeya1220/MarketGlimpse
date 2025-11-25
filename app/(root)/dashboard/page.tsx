@@ -1,5 +1,6 @@
 import TradingViewWidget from '@/components/TradingViewWidget';
 import DashboardStats from '@/components/DashboardStats';
+import { RecentlyViewedStocks } from '@/components/RecentlyViewedStocks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   HEATMAP_WIDGET_CONFIG,
@@ -27,6 +28,9 @@ const Dashboard = () => {
 
       {/* Stats Section */}
       <DashboardStats />
+
+      {/* Recently Viewed Stocks */}
+      <RecentlyViewedStocks />
 
       {/* Market Overview & Heatmap Section */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">

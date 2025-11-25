@@ -1,5 +1,6 @@
 import TradingViewWidget from "@/components/TradingViewWidget";
 import StockHeader from "@/components/StockHeader";
+import { StockViewTracker } from "@/components/StockViewTracker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -25,6 +26,9 @@ export default async function StockDetails({ params }: StockDetailsPageProps) {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
+      {/* Track this stock view */}
+      <StockViewTracker symbol={symbol.toUpperCase()} name={symbol.toUpperCase()} />
+      
       {/* Stock Header */}
       <StockHeader 
         symbol={symbol.toUpperCase()} 

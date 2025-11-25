@@ -4,13 +4,16 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, ArrowRight, ExternalLink } from 'lucide-react';
 import WatchlistButton from '@/components/WatchlistButton';
+import { StockNotes } from '@/components/StockNotes';
+import { StockTags } from '@/components/StockTags';
 
 interface WatchlistStockCardProps {
   item: StockWithData;
   index: number;
+  onUpdate?: () => void;
 }
 
-const WatchlistStockCard = ({ item, index }: WatchlistStockCardProps) => {
+const WatchlistStockCard = ({ item, index, onUpdate }: WatchlistStockCardProps) => {
   const isPositive = (item.changePercent ?? 0) >= 0;
   const changeClass = isPositive ? 'text-teal-400' : 'text-red-500';
   const bgClass = isPositive ? 'bg-teal-500/10' : 'bg-red-500/10';
@@ -48,6 +51,27 @@ const WatchlistStockCard = ({ item, index }: WatchlistStockCardProps) => {
               type="icon"
             />
           </div>
+
+          {/* Tags */}
+          {item.tags && item.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {item.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-1 text-xs text-blue-500"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Notes Preview */}
+          {item.notes && (
+            <div className="p-3 bg-yellow-500/5 border border-yellow-500/20 rounded-lg">
+              <p className="text-xs text-gray-400 line-clamp-2">{item.notes}</p>
+            </div>
+          )}
 
           {/* Price Information */}
           <div className="grid grid-cols-2 gap-4 py-4 border-y border-gray-700">
@@ -95,13 +119,25 @@ const WatchlistStockCard = ({ item, index }: WatchlistStockCardProps) => {
           </div>
 
           {/* View Details Link */}
-          <Link
-            href={`/stocks/${item.symbol}`}
-            className="flex items-center justify-center gap-2 w-full py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-100 rounded-lg transition-colors group/btn"
-          >
-            <span className="font-medium">View Details</span>
-            <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-          </Link>
+          <div className="flex gap-2">
+            <StockNotes 
+              symbol={item.symbol} 
+              initialNotes={item.notes} 
+              onUpdate={onUpdate}
+            />
+            <StockTags 
+              symbol={item.symbol} 
+              initialTags={item.tags} 
+              onUpdate={onUpdate}
+            />
+            <Link
+              href={`/stocks/${item.symbol}`}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-100 rounded-lg transition-colors group/btn"
+            >
+              <span className="font-medium">View Details</span>
+              <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </CardContent>
     </Card>

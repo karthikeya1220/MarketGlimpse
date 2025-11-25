@@ -123,3 +123,82 @@ export async function removeFromWatchlist(symbol: string): Promise<ActionResult<
     return errorResult('Failed to remove from watchlist', 'SERVER_ERROR');
   }
 }
+
+export async function updateWatchlistNotes(symbol: string, notes: string): Promise<ActionResult<void>> {
+  try {
+    await connectToDatabase();
+    
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return errorResult('Not authenticated', 'AUTH_ERROR');
+    }
+
+    // Validate notes length
+    if (notes.length > 2000) {
+      return errorResult('Notes too long (max 2000 characters)', 'VALIDATION_ERROR');
+    }
+
+    const result = await Watchlist.updateOne(
+      {
+        userId: session.user.id,
+        symbol: symbol.toUpperCase(),
+      },
+      {
+        $set: { notes: notes.trim() || undefined },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return errorResult('Stock not found in watchlist', 'NOT_FOUND');
+    }
+
+    logger.info(`Updated notes for ${symbol} in watchlist for user ${session.user.id}`);
+    return successResult(undefined, 'Notes updated');
+  } catch (err) {
+    logger.error('Failed to update watchlist notes', err instanceof Error ? err : new Error(String(err)));
+    return errorResult('Failed to update notes', 'SERVER_ERROR');
+  }
+}
+
+export async function updateWatchlistTags(symbol: string, tags: string[]): Promise<ActionResult<void>> {
+  try {
+    await connectToDatabase();
+    
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return errorResult('Not authenticated', 'AUTH_ERROR');
+    }
+
+    // Validate and clean tags
+    const cleanTags = tags
+      .map(t => t.trim().toLowerCase())
+      .filter(t => t.length > 0 && t.length <= 20)
+      .slice(0, 10); // Max 10 tags
+
+    const result = await Watchlist.updateOne(
+      {
+        userId: session.user.id,
+        symbol: symbol.toUpperCase(),
+      },
+      {
+        $set: { tags: cleanTags.length > 0 ? cleanTags : undefined },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return errorResult('Stock not found in watchlist', 'NOT_FOUND');
+    }
+
+    logger.info(`Updated tags for ${symbol} in watchlist for user ${session.user.id}`);
+    return successResult(undefined, 'Tags updated');
+  } catch (err) {
+    logger.error('Failed to update watchlist tags', err instanceof Error ? err : new Error(String(err)));
+    return errorResult('Failed to update tags', 'SERVER_ERROR');
+  }
+}

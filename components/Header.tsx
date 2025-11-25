@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { TrendingUp } from 'lucide-react';
 import NavItems from '@/components/NavItems';
 import UserDropdown from '@/components/UserDropdown';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const Header = ({ user }: { user: User }) => {
   return (
@@ -17,7 +18,10 @@ const Header = ({ user }: { user: User }) => {
           <NavItems />
         </nav>
 
-        <UserDropdown user={user} />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <UserDropdown user={user} />
+        </div>
       </div>
     </header>
   );
