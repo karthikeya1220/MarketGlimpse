@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { TrendingUp } from 'lucide-react';
 import { auth } from '@/lib/better-auth/auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -12,14 +13,11 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
   return (
     <main className="auth-layout">
       <section className="auth-left-section scrollbar-hide-default">
-        <Link href="/" className="auth-logo">
-          <Image
-            src="/assets/icons/logo.svg"
-            alt="MarketGlimpse logo"
-            width={140}
-            height={32}
-            className="h-8 w-auto"
-          />
+        <Link href="/" className="auth-logo flex items-center space-x-2 group">
+          <TrendingUp className="w-8 h-8 text-blue-500 group-hover:text-blue-400 transition-colors" />
+          <span className="text-xl font-bold text-white group-hover:text-gray-100 transition-colors">
+            MarketGlimpse
+          </span>
         </Link>
 
         <div className="pb-6 lg:pb-8 flex-1">{children}</div>
