@@ -52,6 +52,7 @@ const WatchlistContent = ({ watchlistData, onUpdate }: WatchlistContentProps) =>
       <WatchlistActions
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        watchlistData={watchlistData}
       />
 
       {/* Content */}
