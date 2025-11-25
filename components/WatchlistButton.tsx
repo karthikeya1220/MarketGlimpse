@@ -1,25 +1,28 @@
 'use client';
-import React, { useMemo, useState, useTransition } from 'react';
+import React, { useState, useTransition } from 'react';
 import { addToWatchlist, removeFromWatchlist } from '@/lib/actions/watchlist.actions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { Star, Trash2, Loader2, Plus } from 'lucide-react';
+
+interface WatchlistButtonProps {
+  symbol: string;
+  company?: string;
+  isInWatchlist?: boolean;
+  type?: 'icon' | 'button';
+  onWatchlistChange?: (symbol: string, added: boolean) => void;
+}
 
 const WatchlistButton = ({
   symbol,
   company,
   isInWatchlist,
-  showTrashIcon = false,
   type = 'button',
   onWatchlistChange,
 }: WatchlistButtonProps) => {
   const [added, setAdded] = useState<boolean>(!!isInWatchlist);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-
-  const label = useMemo(() => {
-    if (type === 'icon') return added ? '' : '';
-    return added ? 'Remove from Watchlist' : 'Add to Watchlist';
-  }, [added, type]);
 
   const handleClick = () => {
     const next = !added;
@@ -28,7 +31,7 @@ const WatchlistButton = ({
       try {
         if (next) {
           // Adding to watchlist
-          const result = await addToWatchlist(symbol, company);
+          const result = await addToWatchlist(symbol, company || symbol);
           if (result.success) {
             setAdded(true);
             toast.success(result.message || `${symbol} added to watchlist`);
@@ -60,51 +63,61 @@ const WatchlistButton = ({
       <button
         title={added ? `Remove ${symbol} from watchlist` : `Add ${symbol} to watchlist`}
         aria-label={added ? `Remove ${symbol} from watchlist` : `Add ${symbol} to watchlist`}
-        className={`watchlist-icon-btn ${added ? 'watchlist-icon-added' : ''}`}
+        className={`group relative p-3 rounded-full transition-all duration-300 ${
+          added 
+            ? 'bg-yellow-500/10 hover:bg-yellow-500/20 border-2 border-yellow-500/50 hover:border-yellow-500' 
+            : 'bg-gray-700/50 hover:bg-gray-600 border-2 border-gray-600 hover:border-yellow-500/50'
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
         onClick={handleClick}
         disabled={isPending}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill={added ? '#FACC15' : 'none'}
-          stroke="#FACC15"
-          strokeWidth="1.5"
-          className="watchlist-star"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.385a.563.563 0 00-.182-.557L3.04 10.385a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345l2.125-5.111z"
+        {isPending ? (
+          <Loader2 className="h-5 w-5 text-yellow-500 animate-spin" />
+        ) : (
+          <Star 
+            className={`h-5 w-5 transition-all duration-300 ${
+              added 
+                ? 'text-yellow-500 fill-yellow-500 scale-110' 
+                : 'text-gray-400 group-hover:text-yellow-500 group-hover:scale-110'
+            }`}
           />
-        </svg>
+        )}
       </button>
     );
   }
 
   return (
-    <button 
-      className={`watchlist-btn ${added ? 'watchlist-remove' : ''}`} 
+    <button
+      className={`group relative flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+        added
+          ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-2 border-red-500/30 hover:border-red-500'
+          : 'bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border-2 border-yellow-500/30 hover:border-yellow-500'
+      }`}
       onClick={handleClick}
       disabled={isPending}
     >
-      {showTrashIcon && added ? (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-5 h-5 mr-2"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-          />
-        </svg>
-      ) : null}
-      <span>{isPending ? (added ? 'Removing...' : 'Adding...') : label}</span>
+      {isPending ? (
+        <>
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading...</span>
+        </>
+      ) : added ? (
+        <>
+          <div className="relative">
+            <Star className="h-5 w-5 fill-red-400 text-red-400" />
+            <Trash2 className="h-4 w-4 absolute -bottom-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          </div>
+          <span>Remove from Watchlist</span>
+        </>
+      ) : (
+        <>
+          <div className="relative">
+            <Star className="h-5 w-5 group-hover:fill-yellow-500/20 transition-all duration-300" />
+            <Plus className="h-3 w-3 absolute -top-1 -right-1 bg-yellow-500 rounded-full text-gray-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          </div>
+          <span>Add to Watchlist</span>
+        </>
+      )}
     </button>
   );
 };
