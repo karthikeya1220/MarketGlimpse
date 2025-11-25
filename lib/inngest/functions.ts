@@ -5,6 +5,10 @@ import { getAllUsersForNewsEmail } from '@/lib/actions/user.actions';
 import { getWatchlistSymbolsByEmail } from '@/lib/actions/watchlist.actions';
 import { getNews } from '@/lib/actions/finnhub.actions';
 import { logger } from '@/lib/logger';
+import { checkPriceAlertsJob } from '@/lib/inngest/check-price-alerts';
+
+// Export all Inngest functions
+export { checkPriceAlertsJob };
 
 export const sendSignUpEmail = inngest.createFunction(
   { id: 'sign-up-email' },
