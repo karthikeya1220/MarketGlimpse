@@ -27,7 +27,7 @@ export const sendWelcomeEmail = async ({ email, name, intro }: WelcomeEmailData)
 
 export const sendNewsSummaryEmail = async ({
   email,
-  name,
+  // name,
   newsContent,
 }: {
   email: string;
