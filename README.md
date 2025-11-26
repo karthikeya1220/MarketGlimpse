@@ -1,88 +1,99 @@
-# MarketGlimpse - Stock Market DashboardThis is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MarketGlimpse - Stock Market Dashboard
 
+A modern, production-ready stock market dashboard built with Next.js 16, React 19, and TypeScript. Track stocks, get market insights, and receive personalized investment recommendations.
 
+## ✨ Features
 
-A modern, production-ready stock market dashboard built with Next.js 16, React 19, and TypeScript. Track stocks, get market insights, and receive personalized investment recommendations.## Getting Started
+- 🔐 **Secure Authentication** - Email/password authentication with Better Auth
+- 📊 **Real-time Market Data** - Live stock prices and market information via Finnhub API
+- 📰 **Market News** - Curated news feed for your watchlist
+- ⭐ **Watchlist Management** - Track your favorite stocks
+- 🤖 **AI-Powered Insights** - Personalized recommendations using Google Gemini
+- 📧 **Email Notifications** - Welcome emails and market updates
+- 📈 **Interactive Charts** - TradingView widgets for advanced analysis
+- 🎨 **Modern UI** - Beautiful interface with Tailwind CSS and Radix UI
 
+## 🏗️ System Architecture
 
-
-## ✨ FeaturesFirst, run the development server:
-
-
-
-- 🔐 **Secure Authentication** - Email/password authentication with Better Auth```bash
-
-- 📊 **Real-time Market Data** - Live stock prices and market information via Finnhub APInpm run dev
-
-- 📰 **Market News** - Curated news feed for your watchlist# or
-
-- ⭐ **Watchlist Management** - Track your favorite stocksyarn dev
-
-- 🤖 **AI-Powered Insights** - Personalized recommendations using Google Gemini# or
-
-- 📧 **Email Notifications** - Welcome emails and market updatespnpm dev
-
-- 📈 **Interactive Charts** - TradingView widgets for advanced analysis# or
-
-- 🎨 **Modern UI** - Beautiful interface with Tailwind CSS and Radix UIbun dev
+### High-Level Overview
 
 ```
+┌─────────────────────────────────────────────────────────────┐
+│                         Client Layer                         │
+│  (Next.js 16 App Router, React 19, TailwindCSS)            │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      Middleware Layer                        │
+│  • Rate Limiting                                             │
+│  • Authentication (Better Auth)                              │
+│  • Request Deduplication                                     │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Application Layer                        │
+│  • Server Actions                                            │
+│  • API Routes                                                │
+│  • Error Handling                                            │
+│  • Validation (Zod)                                          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                    ┌─────────┴─────────┐
+                    ▼                   ▼
+        ┌──────────────────┐  ┌──────────────────┐
+        │  External APIs   │  │    Database      │
+        │  • Finnhub       │  │    MongoDB       │
+        │  • Gemini AI     │  │    • Users       │
+        │  • TradingView   │  │    • Watchlist   │
+        │  • Nodemailer    │  │    • Sessions    │
+        └──────────────────┘  └──────────────────┘
+```
 
-## 🚀 Quick Start
+### Data Flow
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+#### Authentication Flow
+User → Sign Up Form → Validation (Zod) → Server Action → Better Auth → MongoDB → Inngest Event → Email Service → User
+
+#### Stock Search Flow
+User → Search Input → Debounce (500ms) → Server Action → Request Deduplicator → Cache Check → Finnhub API → Response → Format & Return → Client
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-- Node.js 20+ 
-
-- MongoDB databaseThis project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
+- Node.js 20+
+- MongoDB database
 - API keys (Finnhub, Google Gemini)
+- Gmail account for email sending
 
-- Gmail account for email sending## Learn More
+### Installation
 
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/karthikeya1220/MarketGlimpse.git
+   cd stock-app
+   ```
 
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### InstallationTo learn more about Next.js, take a look at the following resources:
+3. **Setup Environment Variables**
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` and add your API keys and secrets.
 
-
-
-```bash- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-
-# Clone the repository- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-git clone https://github.com/karthikeya1220/MarketGlimpse.git
-
-cd stock-appYou can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-
-
-# Install dependencies## Deploy on Vercel
-
-npm install
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-# Copy environment variables
-
-cp .env.example .envCheck out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-
-# Edit .env and add your API keys
-nano .env
-
-# Run development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+4. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## 🔧 Configuration
-
-### Environment Variables
 
 Create a `.env` file with the following variables:
 
@@ -109,12 +120,6 @@ NODEMAILER_PASSWORD=your-gmail-app-password
 
 See [.env.example](.env.example) for detailed documentation.
 
-## 📚 Documentation
-
-- [Production Checklist](PRODUCTION_CHECKLIST.md) - Complete deployment guide
-- [Architecture](ARCHITECTURE.md) - System design and architecture
-- [Implementation Summary](IMPLEMENTATION_SUMMARY.md) - Development progress
-
 ## 🛠️ Development
 
 ### Available Scripts
@@ -133,14 +138,12 @@ npm test:watch       # Run tests in watch mode
 
 ### Code Quality
 
-This project includes:
-
-- ✅ TypeScript for type safety
-- ✅ ESLint for code linting
-- ✅ Prettier for code formatting
-- ✅ Husky for pre-commit hooks
-- ✅ Jest for unit testing
-- ✅ GitHub Actions for CI/CD
+This project enforces high code quality standards:
+- **TypeScript** for type safety
+- **ESLint** for code linting
+- **Prettier** for code formatting
+- **Husky** for pre-commit hooks
+- **Jest** for unit testing
 
 ## 🏗️ Tech Stack
 
@@ -166,55 +169,57 @@ This project includes:
 - **Linting**: ESLint
 - **Formatting**: Prettier
 
-## 🔐 Security Features
+## 🛡️ Security
 
-- ✅ Input validation with Zod schemas
-- ✅ Rate limiting on API routes
-- ✅ Environment variable validation
-- ✅ Secure authentication with Better Auth
-- ✅ Request deduplication
-- ✅ Error boundaries for graceful failures
-- ✅ Security headers (HSTS, CSP, etc.)
-- ✅ Structured logging
+- **Input Validation**: All user inputs are validated with Zod schemas.
+- **Authentication**: Secure session management with Better Auth.
+- **Rate Limiting**: API routes and server actions are rate-limited to prevent abuse.
+- **Environment Validation**: Critical environment variables are validated at startup.
+- **Security Headers**: HSTS, CSP, and other security headers are configured.
 
-## 🧪 Testing
+See [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for a complete security checklist.
 
-```bash
-# Run all tests
-npm test
+## 📁 Directory Structure
 
-# Run tests in watch mode
-npm test:watch
-
-# Run tests with coverage
-npm test -- --coverage
 ```
-
-Test files are located in `lib/__tests__/`.
+stock-app/
+├── app/                      # Next.js App Router
+├── components/               # React components
+│   ├── ui/                   # Reusable UI components
+│   └── forms/                # Form components
+├── lib/                      # Core business logic
+│   ├── actions/              # Server actions
+│   ├── validations/          # Zod schemas
+│   └── utils.ts              # Utility functions
+├── database/                 # Database layer
+├── hooks/                    # React hooks
+├── types/                    # TypeScript types
+└── public/                   # Static assets
+```
 
 ## 📦 Deployment
 
 ### Vercel (Recommended)
 
 ```bash
-# Install Vercel CLI
 npm i -g vercel
-
-# Deploy
 vercel --prod
 ```
 
 ### Docker
 
 ```bash
-# Build image
 docker build -t stock-app .
-
-# Run container
 docker run -p 3000:3000 --env-file .env stock-app
 ```
 
-See [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for complete deployment guide.
+See [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for a complete deployment guide.
+
+## 📚 Documentation
+
+- [Architecture Overview](ARCHITECTURE.md)
+- [Implementation Summary](IMPLEMENTATION_SUMMARY.md)
+- [Production Checklist](PRODUCTION_CHECKLIST.md)
 
 ## 🤝 Contributing
 
@@ -232,15 +237,3 @@ This project is private and proprietary.
 
 - **Developer**: Darshan Karthikeya
 - **Repository**: [karthikeya1220/MarketGlimpse](https://github.com/karthikeya1220/MarketGlimpse)
-
-## 🐛 Known Issues
-
-See [GitHub Issues](https://github.com/karthikeya1220/MarketGlimpse/issues) for a list of known issues and feature requests.
-
-## 📞 Support
-
-For support, email your-email@example.com or open an issue on GitHub.
-
----
-
-**Built with ❤️ using Next.js and TypeScript**
