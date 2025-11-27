@@ -43,7 +43,7 @@ export const MARKET_OVERVIEW_WIDGET_CONFIG = {
   dateRange: '12M', // last 12 months
   locale: 'en', // language
   largeChartUrl: '', // link to a large chart if needed
-  isTransparent: true, // makes background transparent
+  isTransparent: false, // makes background transparent
   showFloatingTooltip: true, // show tooltip on hover
   plotLineColorGrowing: '#0FEDBE', // line color when price goes up
   plotLineColorFalling: '#0FEDBE', // line color when price falls
@@ -119,7 +119,8 @@ export const TOP_STORIES_WIDGET_CONFIG = {
   displayMode: 'regular',
   feedMode: 'market',
   colorTheme: 'dark',
-  isTransparent: true,
+  isTransparent: false,
+  backgroundColor: '#141414',
   locale: 'en',
   market: 'stock',
   width: '100%',
