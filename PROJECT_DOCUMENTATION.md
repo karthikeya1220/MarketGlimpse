@@ -1,5 +1,7 @@
 # MarketGlimpse - Project Documentation
 
+
+
 ## 1. What Problem Does It Solve?
 
 **Problem**: Individual investors struggle to track stock market data, manage watchlists, and get personalized investment insights in one place. Most solutions are either too complex (Bloomberg Terminal), too expensive, or lack AI-powered recommendations.
