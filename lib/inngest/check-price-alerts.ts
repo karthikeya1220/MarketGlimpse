@@ -10,11 +10,11 @@ export const checkPriceAlertsJob = inngest.createFunction(
   {
     id: 'check-price-alerts',
     name: 'Check Price Alerts',
+    triggers: [
+      { cron: '*/15 * * * *' }, // Every 15 minutes
+      { event: 'app/check.price.alerts' }, // Manual trigger option
+    ],
   },
-  [
-    { cron: '*/15 * * * *' }, // Every 15 minutes
-    { event: 'app/check.price.alerts' }, // Manual trigger option
-  ],
   async ({ step }) => {
     logger.info('Starting price alert check');
 

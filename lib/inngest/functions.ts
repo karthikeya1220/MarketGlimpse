@@ -11,8 +11,10 @@ import { checkPriceAlertsJob } from '@/lib/inngest/check-price-alerts';
 export { checkPriceAlertsJob };
 
 export const sendSignUpEmail = inngest.createFunction(
-  { id: 'sign-up-email' },
-  { event: 'app/user.created' },
+  { 
+    id: 'sign-up-email',
+    triggers: [{ event: 'app/user.created' }]
+  },
   async ({ event, step }) => {
     const userProfile = `
             - Country: ${event.data.country}
@@ -59,11 +61,11 @@ export const sendDailyNewsSummary = inngest.createFunction(
   {
     id: 'daily-news-summary',
     name: 'Send Daily News Summary',
+    triggers: [
+      { cron: '0 12 * * *' }, // Daily at 12 PM UTC
+      { event: 'app/send.daily.news' }, // Manual trigger option
+    ]
   },
-  [
-    { cron: '0 12 * * *' }, // Daily at 12 PM UTC
-    { event: 'app/send.daily.news' }, // Manual trigger option
-  ],
   async ({ step }) => {
     // Step 1: Get all users
     const users = await step.run('get-all-users', async () => {
