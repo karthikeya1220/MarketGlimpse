@@ -4,6 +4,7 @@ import { PortfolioHoldingCard } from '@/components/PortfolioHoldingCard';
 import { AddPortfolioDialog } from '@/components/AddPortfolioDialog';
 import { Briefcase, TrendingUp } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
 export default async function PortfolioPage() {
   const holdings = await getUserPortfolio();
   
