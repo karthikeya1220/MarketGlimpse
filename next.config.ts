@@ -7,7 +7,12 @@ const nextConfig: NextConfig = {
 
   // Image optimization
   images: {
-    domains: ['static.finnhub.io'], // Add allowed image domains
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'static.finnhub.io',
+      }
+    ],
     formats: ['image/avif', 'image/webp'],
   },
 
@@ -42,10 +47,7 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Environment variables validation
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
 };
 
 export default nextConfig;

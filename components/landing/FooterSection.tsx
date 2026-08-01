@@ -43,7 +43,7 @@ export default function FooterSection() {
         <div className="grid gap-8 mb-12 md:grid-cols-2 lg:grid-cols-6">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link href={"/" as any} className="inline-flex items-center mb-4 space-x-2">
+            <Link href={"/" as never} className="inline-flex items-center mb-4 space-x-2">
               <TrendingUp className="w-8 h-8 text-blue-500" />
               <span className="text-xl font-bold text-white">MarketGlimpse</span>
             </Link>
@@ -77,7 +77,7 @@ export default function FooterSection() {
             <ul className="space-y-3">
               {footerLinks.product.map((link) => (
                 <li key={link.name}>
-                  <Link href={link.href as any} className="text-sm text-gray-400 transition-colors hover:text-white">
+                  <Link href={link.href as never} className="text-sm text-gray-400 transition-colors hover:text-white">
                     {link.name}
                   </Link>
                 </li>
@@ -91,7 +91,7 @@ export default function FooterSection() {
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
-                  <Link href={link.href as any} className="text-sm text-gray-400 transition-colors hover:text-white">
+                  <Link href={link.href as never} className="text-sm text-gray-400 transition-colors hover:text-white">
                     {link.name}
                   </Link>
                 </li>
@@ -105,7 +105,7 @@ export default function FooterSection() {
             <ul className="space-y-3">
               {footerLinks.resources.map((link) => (
                 <li key={link.name}>
-                  <Link href={link.href as any} className="text-sm text-gray-400 transition-colors hover:text-white">
+                  <Link href={link.href as never} className="text-sm text-gray-400 transition-colors hover:text-white">
                     {link.name}
                   </Link>
                 </li>
@@ -119,7 +119,7 @@ export default function FooterSection() {
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
-                  <Link href={link.href as any} className="text-sm text-gray-400 transition-colors hover:text-white">
+                  <Link href={link.href as never} className="text-sm text-gray-400 transition-colors hover:text-white">
                     {link.name}
                   </Link>
                 </li>

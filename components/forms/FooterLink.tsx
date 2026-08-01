@@ -6,8 +6,7 @@ const FooterLink = ({ text, linkText, href }: FooterLinkProps) => {
       <p className="text-sm text-gray-500">
         {text}
         {` `}
-        {/* @ts-expect-error - Next.js typed routes */}
-        <Link href={href} className="footer-link">
+        <Link href={href as never} className="footer-link">
           {linkText}
         </Link>
       </p>

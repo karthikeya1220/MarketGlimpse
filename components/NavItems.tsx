@@ -18,8 +18,7 @@ const NavItems = () => {
       {NAV_ITEMS.map(({ href, label }) => (
         <li key={href}>
           <Link
-            // @ts-expect-error - Next.js typed routes compatibility
-            href={href}
+            href={href as never}
             className={`hover:text-yellow-500 transition-colors ${
               isActive(href) ? 'text-gray-100' : ''
             }`}

@@ -22,17 +22,23 @@ export const signUpWithEmail = async (data: SignUpFormData): Promise<ActionResul
     });
 
     if (response) {
-      await inngest.send({
-        name: 'app/user.created',
-        data: {
-          email: validatedData.email,
-          name: validatedData.fullName,
-          country: validatedData.country,
-          investmentGoals: validatedData.investmentGoals,
-          riskTolerance: validatedData.riskTolerance,
-          preferredIndustry: validatedData.preferredIndustry,
-        },
-      });
+      try {
+        await inngest.send({
+          name: 'app/user.created',
+          data: {
+            email: validatedData.email,
+            name: validatedData.fullName,
+            country: validatedData.country,
+            investmentGoals: validatedData.investmentGoals,
+            riskTolerance: validatedData.riskTolerance,
+            preferredIndustry: validatedData.preferredIndustry,
+          },
+        });
+      } catch (inngestError) {
+        // Log the error but don't fail the signup process
+        // This is especially useful for local development where Inngest might not be configured
+        logger.warn('Failed to dispatch user creation event to Inngest', { error: String(inngestError) });
+      }
     }
 
     return successResult(response as unknown, 'Account created successfully');

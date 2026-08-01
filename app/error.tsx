@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import * as Sentry from '@sentry/nextjs';
 
 /**
  * Next.js Error component - catches errors in route segments
@@ -15,21 +13,12 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    // Log error to Sentry
-    Sentry.captureException(error, {
-      extra: {
-        digest: error.digest,
-      },
-    });
-  }, [error]);
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-8 text-center">
       <div className="max-w-md space-y-4">
         <h2 className="text-2xl font-bold text-red-600">Something went wrong!</h2>
         <p className="text-gray-600">
-          We encountered an unexpected error. Our team has been notified.
+          We encountered an unexpected error.
         </p>
         {process.env.NODE_ENV === 'development' && (
           <details className="mt-4 rounded-lg bg-gray-100 p-4 text-left">
