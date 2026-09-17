@@ -42,6 +42,18 @@ const nextConfig: NextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://s3.tradingview.com https://s3.tradingview.com https://www.tradingview.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https://static.finnhub.io https://*.googleusercontent.com",
+              "font-src 'self'",
+              "connect-src 'self' https://finnhub.io https://generativelanguage.googleapis.com https://*.mongodb.net",
+              "frame-src https://s3.tradingview.com",
+            ].join('; '),
+          },
         ],
       },
     ];

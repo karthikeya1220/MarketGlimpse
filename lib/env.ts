@@ -15,6 +15,13 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+// Known placeholder values that must never be used in production runtime
+const PLACEHOLDERS = new Set([
+  'build-placeholder-min-32-characters-long-123',
+  'build-placeholder',
+  'build@example.com',
+]);
+
 let _env: Env | null = null;
 
 function validateEnv(): Env {
@@ -22,6 +29,26 @@ function validateEnv(): Env {
 
   try {
     _env = envSchema.parse(process.env);
+
+    // At runtime in production, reject known placeholder values.
+    // During `next build`, page data collection also sets NEXT_RUNTIME, so we check
+    // for the absence of build-specific signals to distinguish build from runtime.
+    const isBuild = process.env.npm_lifecycle_event === 'build' || process.argv.includes('build');
+    const isRuntime = !!process.env.NEXT_RUNTIME && !isBuild;
+    if (isRuntime && process.env.NODE_ENV === 'production') {
+      const badKeys: string[] = [];
+      if (PLACEHOLDERS.has(_env.BETTER_AUTH_SECRET)) badKeys.push('BETTER_AUTH_SECRET');
+      if (PLACEHOLDERS.has(_env.FINNHUB_API_KEY)) badKeys.push('FINNHUB_API_KEY');
+      if (PLACEHOLDERS.has(_env.GEMINI_API_KEY)) badKeys.push('GEMINI_API_KEY');
+      if (PLACEHOLDERS.has(_env.NODEMAILER_PASSWORD)) badKeys.push('NODEMAILER_PASSWORD');
+      if (PLACEHOLDERS.has(_env.MONGODB_URI)) badKeys.push('MONGODB_URI');
+      if (badKeys.length > 0) {
+        throw new Error(
+          `🚨 FATAL: Production env vars are using build placeholders: ${badKeys.join(', ')}. ` +
+          `Set real values in your hosting platform's environment variables.`
+        );
+      }
+    }
 
     if (process.env.NODE_ENV === 'development') {
       console.log('✅ Environment variables validated successfully');

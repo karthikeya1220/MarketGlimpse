@@ -3,7 +3,17 @@
 import { connectToDatabase } from '@/database/mongoose';
 import { logger } from '@/lib/logger';
 
+/**
+ * Returns all users with email/name for news email dispatch.
+ * INTERNAL ONLY — called from Inngest server-side functions.
+ * Must NOT be callable from client-side code.
+ */
 export const getAllUsersForNewsEmail = async () => {
+  // Guard: reject if this somehow runs on the client
+  if (typeof window !== 'undefined') {
+    throw new Error('getAllUsersForNewsEmail is server-only');
+  }
+
   try {
     const mongoose = await connectToDatabase();
     const db = mongoose.connection.db;

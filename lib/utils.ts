@@ -5,6 +5,16 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Escape HTML special characters to prevent injection in email templates. */
+export function htmlEscape(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export const formatTimeAgo = (timestamp: number) => {
   const now = Date.now();
   const diffInMs = now - timestamp * 1000; // Convert to milliseconds

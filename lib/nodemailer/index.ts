@@ -5,7 +5,7 @@ import {
   STOCK_ALERT_UPPER_EMAIL_TEMPLATE,
   STOCK_ALERT_LOWER_EMAIL_TEMPLATE
 } from '@/lib/nodemailer/templates';
-import { getFormattedTodayDate } from '@/lib/utils';
+import { getFormattedTodayDate, htmlEscape } from '@/lib/utils';
 import { env } from '@/lib/env';
 
 export const transporter = nodemailer.createTransport({
@@ -17,7 +17,7 @@ export const transporter = nodemailer.createTransport({
 });
 
 export const sendWelcomeEmail = async ({ email, name, intro }: WelcomeEmailData) => {
-  const htmlTemplate = WELCOME_EMAIL_TEMPLATE.replace('{{name}}', name).replace('{{intro}}', intro);
+  const htmlTemplate = WELCOME_EMAIL_TEMPLATE.replace('{{name}}', htmlEscape(name)).replace('{{intro}}', htmlEscape(intro));
 
   const mailOptions = {
     from: `"MarketGlimpse" <MarketGlimpse@jsmastery.pro>`,
@@ -79,15 +79,15 @@ export const sendPriceAlertEmail = async (data: PriceAlertEmailData) => {
     : STOCK_ALERT_LOWER_EMAIL_TEMPLATE;
 
   const htmlTemplate = template
-    .replace(/\{\{symbol\}\}/g, symbol)
-    .replace(/\{\{company\}\}/g, company)
+    .replace(/\{\{symbol\}\}/g, htmlEscape(symbol))
+    .replace(/\{\{company\}\}/g, htmlEscape(company))
     .replace(/\{\{currentPrice\}\}/g, `$${currentPrice.toFixed(2)}`)
     .replace(/\{\{targetPrice\}\}/g, `$${targetPrice.toFixed(2)}`)
-    .replace(/\{\{timestamp\}\}/g, timestamp);
+    .replace(/\{\{timestamp\}\}/g, htmlEscape(timestamp));
 
   const subject = condition === 'above'
-    ? `🚨 ${symbol} reached $${currentPrice.toFixed(2)} - Above your target!`
-    : `🚨 ${symbol} dropped to $${currentPrice.toFixed(2)} - Below your target!`;
+    ? `🚨 ${htmlEscape(symbol)} reached $${currentPrice.toFixed(2)} - Above your target!`
+    : `🚨 ${htmlEscape(symbol)} dropped to $${currentPrice.toFixed(2)} - Below your target!`;
 
   const mailOptions = {
     from: `"MarketGlimpse Alerts" <MarketGlimpse@jsmastery.pro>`,

@@ -7,9 +7,17 @@ import { signUpSchema, signInSchema } from '@/lib/validations/auth';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { type ActionResult, successResult, errorResult } from '@/lib/action-types';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 export const signUpWithEmail = async (data: SignUpFormData): Promise<ActionResult<unknown>> => {
   try {
+    // Rate limit: 5 signups per minute per IP
+    const ip = (await headers()).get('x-forwarded-for') || 'unknown';
+    const rl = checkRateLimit(`signup:${ip}`, 5);
+    if (!rl.success) {
+      return errorResult('Too many sign up attempts. Please try again later.', 'RATE_LIMITED');
+    }
+
     // Validate input
     const validatedData = signUpSchema.parse(data);
 
@@ -59,6 +67,13 @@ export const signUpWithEmail = async (data: SignUpFormData): Promise<ActionResul
 
 export const signInWithEmail = async (data: SignInFormData): Promise<ActionResult<unknown>> => {
   try {
+    // Rate limit: 5 sign-in attempts per minute per IP (brute-force protection)
+    const ip = (await headers()).get('x-forwarded-for') || 'unknown';
+    const rl = checkRateLimit(`signin:${ip}`, 5);
+    if (!rl.success) {
+      return errorResult('Too many sign in attempts. Please try again later.', 'RATE_LIMITED');
+    }
+
     // Validate input
     const validatedData = signInSchema.parse(data);
 
