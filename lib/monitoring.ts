@@ -18,7 +18,7 @@ export const trackError = (error: Error, context?: Record<string, unknown>) => {
 /**
  * Set user context for error tracking
  */
-export const setUserContext = (userId: string, email?: string, name?: string) => {
+export const setUserContext = (_userId: string, _email?: string, _name?: string) => {
   // Implementation removed (was Sentry)
 };
 
@@ -32,13 +32,13 @@ export const clearUserContext = () => {
 /**
  * Add custom context to error reports
  */
-export const setCustomContext = (name: string, context: Record<string, unknown>) => {
+export const setCustomContext = (_name: string, _context: Record<string, unknown>) => {
   // Implementation removed (was Sentry)
 };
 
 /**
  * Add tags to error reports for better filtering
  */
-export const setTag = (key: string, value: string) => {
+export const setTag = (_key: string, _value: string) => {
   // Implementation removed (was Sentry)
 };

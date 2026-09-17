@@ -5,7 +5,7 @@
  * This must be minimal and not depend on external UI components
  */
 export default function GlobalError({
-  error,
+  error: _error,
   reset,
 }: {
   error: Error & { digest?: string };
