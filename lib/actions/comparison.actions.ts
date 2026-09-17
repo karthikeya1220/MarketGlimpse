@@ -2,6 +2,7 @@
 
 import { logger } from '@/lib/logger';
 import { env } from '@/lib/env';
+import { comparisonSymbolsSchema } from '@/lib/validations/comparison';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const FINNHUB_API_KEY = env.FINNHUB_API_KEY;
@@ -45,12 +46,16 @@ interface FinnhubMetrics {
 }
 
 export async function getStockComparisonData(symbols: string[]): Promise<StockComparisonData[]> {
-  if (!symbols || symbols.length === 0) {
+  const parsed = comparisonSymbolsSchema.safeParse(symbols);
+  if (!parsed.success) {
+    logger.warn('Invalid comparison symbols', { error: parsed.error.issues.map((i) => i.message).join(', ') });
     return [];
   }
 
+  const validSymbols = parsed.data;
+
   const data = await Promise.all(
-    symbols.map(async (symbol) => {
+    validSymbols.map(async (symbol) => {
       try {
         // Fetch quote data
         const quoteUrl = `${FINNHUB_BASE_URL}/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_API_KEY}`;

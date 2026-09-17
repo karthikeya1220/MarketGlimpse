@@ -7,6 +7,7 @@ import { auth } from '@/lib/better-auth/auth';
 import { headers } from 'next/headers';
 import { type ActionResult, successResult, errorResult } from '@/lib/action-types';
 import { env } from '@/lib/env';
+import { addToPortfolioSchema, updatePortfolioHoldingSchema, holdingIdSchema } from '@/lib/validations/portfolio';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const FINNHUB_API_KEY = env.FINNHUB_API_KEY;
@@ -112,6 +113,11 @@ export interface AddPortfolioData {
 
 export async function addToPortfolio(data: AddPortfolioData): Promise<ActionResult<void>> {
   try {
+    const parsed = addToPortfolioSchema.safeParse(data);
+    if (!parsed.success) {
+      return errorResult(parsed.error.issues.map((i) => i.message).join(', '), 'VALIDATION_ERROR');
+    }
+
     await connectToDatabase();
     
     const session = await auth.api.getSession({
@@ -122,40 +128,19 @@ export async function addToPortfolio(data: AddPortfolioData): Promise<ActionResu
       return errorResult('Not authenticated', 'AUTH_ERROR');
     }
 
-    // Validate inputs
-    if (!data.symbol || !data.company) {
-      return errorResult('Symbol and company are required', 'VALIDATION_ERROR');
-    }
-
-    if (data.quantity <= 0) {
-      return errorResult('Quantity must be greater than 0', 'VALIDATION_ERROR');
-    }
-
-    if (data.buyPrice <= 0) {
-      return errorResult('Buy price must be greater than 0', 'VALIDATION_ERROR');
-    }
-
-    const buyDate = new Date(data.buyDate);
-    if (isNaN(buyDate.getTime())) {
-      return errorResult('Invalid date', 'VALIDATION_ERROR');
-    }
-
-    if (buyDate > new Date()) {
-      return errorResult('Buy date cannot be in the future', 'VALIDATION_ERROR');
-    }
-
+    const d = parsed.data;
     await Portfolio.create({
       userId: session.user.id,
-      symbol: data.symbol.toUpperCase(),
-      company: data.company,
-      quantity: data.quantity,
-      buyPrice: data.buyPrice,
-      buyDate,
-      notes: data.notes?.trim() || undefined,
+      symbol: d.symbol,
+      company: d.company,
+      quantity: d.quantity,
+      buyPrice: d.buyPrice,
+      buyDate: new Date(d.buyDate),
+      notes: d.notes?.trim() || undefined,
       addedAt: new Date(),
     });
 
-    logger.info(`Added ${data.symbol} to portfolio for user ${session.user.id}`);
+    logger.info(`Added ${d.symbol} to portfolio for user ${session.user.id}`);
     return successResult(undefined, 'Added to portfolio');
   } catch (err) {
     logger.error('Failed to add to portfolio', err instanceof Error ? err : new Error(String(err)));
@@ -168,6 +153,16 @@ export async function updatePortfolioHolding(
   data: Partial<AddPortfolioData>
 ): Promise<ActionResult<void>> {
   try {
+    const idParsed = holdingIdSchema.safeParse(holdingId);
+    if (!idParsed.success) {
+      return errorResult(idParsed.error.issues.map((i) => i.message).join(', '), 'VALIDATION_ERROR');
+    }
+
+    const dataParsed = updatePortfolioHoldingSchema.safeParse(data);
+    if (!dataParsed.success) {
+      return errorResult(dataParsed.error.issues.map((i) => i.message).join(', '), 'VALIDATION_ERROR');
+    }
+
     await connectToDatabase();
     
     const session = await auth.api.getSession({
@@ -179,34 +174,15 @@ export async function updatePortfolioHolding(
     }
 
     const updateData: Record<string, unknown> = {};
+    const d = dataParsed.data;
 
-    if (data.quantity !== undefined) {
-      if (data.quantity <= 0) {
-        return errorResult('Quantity must be greater than 0', 'VALIDATION_ERROR');
-      }
-      updateData.quantity = data.quantity;
-    }
+    if (d.quantity !== undefined) updateData.quantity = d.quantity;
+    if (d.buyPrice !== undefined) updateData.buyPrice = d.buyPrice;
+    if (d.buyDate !== undefined) updateData.buyDate = new Date(d.buyDate);
+    if (d.notes !== undefined) updateData.notes = d.notes?.trim() || undefined;
 
-    if (data.buyPrice !== undefined) {
-      if (data.buyPrice <= 0) {
-        return errorResult('Buy price must be greater than 0', 'VALIDATION_ERROR');
-      }
-      updateData.buyPrice = data.buyPrice;
-    }
-
-    if (data.buyDate) {
-      const buyDate = new Date(data.buyDate);
-      if (isNaN(buyDate.getTime())) {
-        return errorResult('Invalid date', 'VALIDATION_ERROR');
-      }
-      if (buyDate > new Date()) {
-        return errorResult('Buy date cannot be in the future', 'VALIDATION_ERROR');
-      }
-      updateData.buyDate = buyDate;
-    }
-
-    if (data.notes !== undefined) {
-      updateData.notes = data.notes.trim() || undefined;
+    if (Object.keys(updateData).length === 0) {
+      return errorResult('No fields to update', 'VALIDATION_ERROR');
     }
 
     const result = await Portfolio.updateOne(
@@ -228,6 +204,11 @@ export async function updatePortfolioHolding(
 
 export async function removeFromPortfolio(holdingId: string): Promise<ActionResult<void>> {
   try {
+    const parsed = holdingIdSchema.safeParse(holdingId);
+    if (!parsed.success) {
+      return errorResult(parsed.error.issues.map((i) => i.message).join(', '), 'VALIDATION_ERROR');
+    }
+
     await connectToDatabase();
     
     const session = await auth.api.getSession({

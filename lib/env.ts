@@ -11,6 +11,8 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().min(1).default('build-placeholder'),
   NODEMAILER_EMAIL: z.string().email().default('build@example.com'),
   NODEMAILER_PASSWORD: z.string().min(1).default('build-placeholder'),
+  INNGEST_SIGNING_KEY: z.string().optional(),
+  INNGEST_EVENT_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

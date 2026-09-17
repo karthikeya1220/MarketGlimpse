@@ -8,6 +8,7 @@ import { headers } from 'next/headers';
 import { type ActionResult, successResult, errorResult } from '@/lib/action-types';
 import { env } from '@/lib/env';
 import { sendPriceAlertEmail } from '@/lib/nodemailer';
+import { createAlertSchema, alertIdSchema } from '@/lib/validations/alert';
 
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 const FINNHUB_API_KEY = env.FINNHUB_API_KEY;
@@ -82,6 +83,12 @@ export async function getUserAlerts(): Promise<PriceAlert[]> {
 
 export async function createPriceAlert(data: CreateAlertData): Promise<ActionResult<void>> {
   try {
+    const parsed = createAlertSchema.safeParse(data);
+    if (!parsed.success) {
+      return errorResult(parsed.error.issues.map((i) => i.message).join(', '), 'VALIDATION_ERROR');
+    }
+    const d = parsed.data;
+
     await connectToDatabase();
     
     const session = await auth.api.getSession({
@@ -92,24 +99,12 @@ export async function createPriceAlert(data: CreateAlertData): Promise<ActionRes
       return errorResult('Not authenticated', 'AUTH_ERROR');
     }
 
-    if (!data.symbol || !data.company) {
-      return errorResult('Symbol and company are required', 'VALIDATION_ERROR');
-    }
-
-    if (data.targetPrice <= 0) {
-      return errorResult('Target price must be greater than 0', 'VALIDATION_ERROR');
-    }
-
-    if (!['above', 'below'].includes(data.condition)) {
-      return errorResult('Invalid condition', 'VALIDATION_ERROR');
-    }
-
     // Check if similar alert already exists
     const existing = await PriceAlertModel.findOne({
       userId: session.user.id,
-      symbol: data.symbol.toUpperCase(),
-      targetPrice: data.targetPrice,
-      condition: data.condition,
+      symbol: d.symbol,
+      targetPrice: d.targetPrice,
+      condition: d.condition,
       isActive: true,
       isTriggered: false,
     });
@@ -120,17 +115,17 @@ export async function createPriceAlert(data: CreateAlertData): Promise<ActionRes
 
     await PriceAlertModel.create({
       userId: session.user.id,
-      symbol: data.symbol.toUpperCase(),
-      company: data.company,
-      targetPrice: data.targetPrice,
-      condition: data.condition,
+      symbol: d.symbol,
+      company: d.company,
+      targetPrice: d.targetPrice,
+      condition: d.condition,
       isActive: true,
       isTriggered: false,
       notificationSent: false,
       createdAt: new Date(),
     });
 
-    logger.info(`Created price alert for ${data.symbol} for user ${session.user.id}`);
+    logger.info(`Created price alert for ${d.symbol} for user ${session.user.id}`);
     return successResult(undefined, 'Alert created successfully');
   } catch (err) {
     logger.error('Failed to create price alert', err instanceof Error ? err : new Error(String(err)));
@@ -140,6 +135,11 @@ export async function createPriceAlert(data: CreateAlertData): Promise<ActionRes
 
 export async function deleteAlert(alertId: string): Promise<ActionResult<void>> {
   try {
+    const parsed = alertIdSchema.safeParse(alertId);
+    if (!parsed.success) {
+      return errorResult(parsed.error.issues.map((i) => i.message).join(', '), 'VALIDATION_ERROR');
+    }
+
     await connectToDatabase();
     
     const session = await auth.api.getSession({
@@ -169,6 +169,11 @@ export async function deleteAlert(alertId: string): Promise<ActionResult<void>> 
 
 export async function toggleAlert(alertId: string, isActive: boolean): Promise<ActionResult<void>> {
   try {
+    const parsed = alertIdSchema.safeParse(alertId);
+    if (!parsed.success) {
+      return errorResult(parsed.error.issues.map((i) => i.message).join(', '), 'VALIDATION_ERROR');
+    }
+
     await connectToDatabase();
     
     const session = await auth.api.getSession({
